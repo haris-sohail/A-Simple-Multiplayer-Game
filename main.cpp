@@ -291,9 +291,9 @@ int main()
     // create the sprite 
 
     // create a texture first
-    Texture spriteTexture;
+    Texture spriteTexture, point1Texture, point2Texture, point3Texture, point4Texture;
 
-    Sprite sprite;
+    Sprite sprite, point1, point2, point3, point4;
 
     // Failed to load image
 
@@ -311,6 +311,35 @@ int main()
 
     sprite.setScale(3.6, 3.6); // making the sprite twice as bigger
 
+    // create the collectables
+
+    // load the collectable images into the textures
+
+    point1Texture.loadFromFile("assets/point1.png");
+    point2Texture.loadFromFile("assets/point2.png");
+    point3Texture.loadFromFile("assets/point3.png");
+    point4Texture.loadFromFile("assets/point4.png");
+
+    // set the sprite 
+
+    point1.setTexture(point1Texture);
+    point2.setTexture(point2Texture);
+    point3.setTexture(point3Texture);
+    point4.setTexture(point4Texture);   
+
+    // set the scale of the collectables
+
+    point1.setScale(3.6, 3.6);
+    point2.setScale(3.6, 3.6);
+    point3.setScale(3.6, 3.6);
+    point4.setScale(3.6, 3.6); 
+
+    // set the position of the collectables
+    point1.setPosition(4 * 60, 4 * 60);
+    point2.setPosition(6 * 60, 6 * 60);
+    point3.setPosition(9 * 60, 10 * 60);
+    point4.setPosition(10 * 60, 12 * 60);
+
     // draw the sprite
 
     window.draw(sprite);
@@ -320,6 +349,13 @@ int main()
     window.draw(score_player1);
 
     window.draw(score_player2);
+
+    // draw the collectables
+
+    window.draw(point1);
+    window.draw(point2);
+    window.draw(point3);
+    window.draw(point4);
 
     // now display
     window.display();
@@ -427,6 +463,10 @@ int main()
         window.draw(sprite);
         window.draw(score_player1);
         window.draw(score_player2);
+        window.draw(point1);
+        window.draw(point2);
+        window.draw(point3);
+        window.draw(point4);
         window.display();
     }
     pthread_exit(0);
