@@ -369,7 +369,7 @@ int main()
             sprite.setPosition(spritePosition.x, windowSize.y - spriteBounds.height);
         }
 
-        // draw
+        // draw 
         window.clear();
         for(int i = 0; i < n; i++)
         {
