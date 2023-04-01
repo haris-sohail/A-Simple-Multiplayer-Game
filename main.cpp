@@ -323,9 +323,50 @@ int main()
 
         //updates
 
-        if(strcmp(message1, "1left") == 0)
+        // moving player 1 sprite
+
+        if(strcmp(message1, "1right") == 0)
         {
             sprite.move(60, 0);
+        }
+
+        else if(strcmp(message1, "1left") == 0)
+        {
+            sprite.move(-60, 0);
+        }
+
+        else if(strcmp(message1, "1up") == 0)
+        {
+            sprite.move(0, -60);
+        }
+
+        else if(strcmp(message1, "1down") == 0)
+        {
+            sprite.move(0, 60);
+        }
+
+        // if the sprite is going outside the border
+
+        Vector2u windowSize = window.getSize();
+        FloatRect spriteBounds = sprite.getGlobalBounds();
+        Vector2f spritePosition = sprite.getPosition();
+
+        if(spritePosition.x < 0) // left border
+        {
+            sprite.setPosition(0, spritePosition.y);
+        }
+
+        else if(spritePosition.x + spriteBounds.width > windowSize.x) // right border
+        {
+            sprite.setPosition(windowSize.x - spriteBounds.width, spritePosition.y);
+        }
+        else if(spritePosition.y < 0) // top border
+        {
+            sprite.setPosition(spritePosition.x, 0);
+        }
+        else if(spritePosition.y + spriteBounds.height > windowSize.y) // bottom border
+        {
+            sprite.setPosition(spritePosition.x, windowSize.y - spriteBounds.height);
         }
 
         // draw
@@ -353,6 +394,5 @@ int main()
         window.draw(sprite);
         window.display();
     }
-
     pthread_exit(0);
 }
