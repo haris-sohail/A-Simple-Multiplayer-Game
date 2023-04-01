@@ -1,8 +1,35 @@
 #include<iostream>
 #include <SFML/Graphics.hpp>
+#include<pthread.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<fstream>
+#include<fcntl.h>
+#include<sys/stat.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <mqueue.h>
+#include<string.h>
 
 using namespace std;
 using namespace sf;
+
+char message1[256];
+
+struct player1
+{
+    RenderWindow* window;
+    bool change;
+    mqd_t* mq;
+
+    player1(RenderWindow* windowVal, bool changeVal, mqd_t* mqVal)
+    {
+        window = windowVal;
+        change = changeVal;
+        mq = mqVal;
+    }
+};
 
 int generateRandom()
 {
@@ -31,6 +58,160 @@ int generateRandom()
     }
 
     return division;
+}
+
+void* player1_thread(void* args)
+{
+    player1* player1_obj = (player1*) args;
+    bool exitThread = false;
+
+    char message[256];
+
+    while (!exitThread)
+    {
+        // user interaction
+        Event event;
+
+        while (player1_obj->window->pollEvent(event))
+        {
+            if (event.type == Event::Closed) 
+            {
+                exitThread = true;
+                player1_obj->window->close(); 
+                break;
+            }
+            else if (event.type == Event::KeyPressed)
+            {
+                player1_obj->change = 1; // something has been written
+
+                if(Keyboard::isKeyPressed(Keyboard::Left)) // left
+                {
+                    sprintf(message, "1left");
+
+                    mq_send(*(player1_obj->mq), message, strlen(message), 0);
+
+                    exitThread = true;
+                }
+
+                else if(Keyboard::isKeyPressed(Keyboard::Right)) // right
+                {
+                    sprintf(message, "1right");
+
+                    mq_send(*(player1_obj->mq), message, strlen(message), 0);
+
+                    exitThread = true;
+                }
+
+                else if(Keyboard::isKeyPressed(Keyboard::Up)) // up
+                {
+                    sprintf(message, "1up");
+
+                    mq_send(*(player1_obj->mq), message, strlen(message), 0);
+
+                    exitThread = true;
+                }
+
+                else if(Keyboard::isKeyPressed(Keyboard::Down)) // down
+                {
+                    sprintf(message, "1down");
+
+                    mq_send(*(player1_obj->mq), message, strlen(message), 0);
+
+                    exitThread = true;
+                }
+            }
+        }
+    }
+
+    pthread_exit(0);
+}
+
+
+void create_player1_thread(player1* player1_obj)
+{
+    pthread_t p1;
+
+    pthread_attr_t atr1;
+
+    // iniitiate
+    pthread_attr_init(&atr1);
+
+    // making thread joinable
+    pthread_attr_setdetachstate(&atr1, PTHREAD_CREATE_JOINABLE);
+
+    pthread_create(&p1, &atr1, player1_thread, player1_obj);
+
+    pthread_join(p1, NULL);
+
+    return;
+}
+
+void* readFromQueue(void* args)
+{
+    player1* player1_obj = (player1*) args;
+    char message[256];
+
+    unsigned int priority;
+
+    while (player1_obj->window->isOpen())
+    {
+        int bytesRead = mq_receive(*(player1_obj->mq), message, sizeof(message), &priority);
+
+        if (bytesRead > 0) // there exists a message
+        {
+            message[bytesRead] = '\0';
+            //cout << "Received message: " << message << endl;
+
+            strcpy(message1, message);
+        }
+    }
+
+    pthread_exit(0);
+}
+
+void create_readThread(player1* player1_obj)
+{
+    pthread_t read;
+
+    pthread_attr_t atr1;
+
+    // iniitiate
+    pthread_attr_init(&atr1);
+
+    // making thread joinable
+    pthread_attr_setdetachstate(&atr1, PTHREAD_CREATE_JOINABLE);
+
+    pthread_create(&read, &atr1, readFromQueue, player1_obj);
+
+    return;
+}
+
+
+mqd_t* createMessageQueue()
+{
+    mqd_t* mq = new mqd_t; // descriptor for message queue
+
+    // setting the attributes for the message queues
+
+    struct mq_attr atr;
+    
+    atr.mq_maxmsg = 10; // max no of messages
+    atr.mq_flags = 0;
+    atr.mq_curmsgs = 0; // no of messages currently
+    atr.mq_msgsize = 256; // max size of message
+
+    mq_unlink("/player1_queue"); // if there is a queue of the same name
+
+    *mq = mq_open("/player1_queue", O_CREAT | O_RDWR, 0666, &atr); // open the Q
+
+    return mq;
+
+    if (*mq == (mqd_t)-1)
+    {
+        cout << "Queue open failed" << endl;
+        return nullptr;
+    }
+
 }
 
 int main()
@@ -110,6 +291,14 @@ int main()
     // now display the sprite and the board
     window.display();
 
+    // making message queue for player 1
+
+    mqd_t* mq = createMessageQueue(); // message queue descriptor
+
+    // making object for player 1
+
+    player1 player1_obj(&window, 0, mq);
+
     // display the window
     while (window.isOpen())
     {
@@ -124,7 +313,20 @@ int main()
             }
         }
 
+        // player 1 thread function
+
+        create_player1_thread(&player1_obj);
+
+        // read from the message queue
+
+        create_readThread(&player1_obj);
+
         //updates
+
+        if(strcmp(message1, "1left") == 0)
+        {
+            sprite.move(60, 0);
+        }
 
         // draw
         window.clear();
@@ -151,4 +353,6 @@ int main()
         window.draw(sprite);
         window.display();
     }
+
+    pthread_exit(0);
 }
