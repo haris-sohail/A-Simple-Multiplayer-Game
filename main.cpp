@@ -215,7 +215,7 @@ mqd_t* createMessageQueue()
 }
 
 int main()
-{
+{    
     int n = generateRandom(); 
 
     // generate a n x n board 
@@ -237,6 +237,33 @@ int main()
     // create the square box
 
     RectangleShape squareShape(Vector2f(boxSize, boxSize)); // creates a 2D vector with length and width equal to the boxSize
+
+    // score 
+
+    // font
+    sf::Font font;
+    font.loadFromFile("assets/blue_smiles.ttf");
+    Vector2u window_size = window.getSize();
+
+    // score player 1
+    Text score_player1;
+    score_player1.setFont(font);
+    score_player1.setCharacterSize(40);
+    score_player1.setPosition(window_size.x - 240, 10);
+    score_player1.setString("Score P1: 0");
+    score_player1.setFillColor(Color(139, 0, 0));
+
+    int score_1 = 0;
+
+    // score player 2
+    Text score_player2;
+    score_player2.setFont(font);
+    score_player2.setCharacterSize(40);
+    score_player2.setPosition(window_size.x - 240, 60);
+    score_player2.setString("Score P2: 0");
+    score_player2.setFillColor(Color(0, 0, 139));
+
+    int score_2 = 0;
 
     // create the game board
 
@@ -288,7 +315,13 @@ int main()
 
     window.draw(sprite);
 
-    // now display the sprite and the board
+    // draw the text
+
+    window.draw(score_player1);
+
+    window.draw(score_player2);
+
+    // now display
     window.display();
 
     // making message queue for player 1
@@ -392,6 +425,8 @@ int main()
             }
         }
         window.draw(sprite);
+        window.draw(score_player1);
+        window.draw(score_player2);
         window.display();
     }
     pthread_exit(0);
