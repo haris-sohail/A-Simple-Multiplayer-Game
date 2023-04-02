@@ -11,6 +11,9 @@
 #include <sys/msg.h>
 #include <mqueue.h>
 #include<string.h>
+#include<string>
+#include <SFML/Audio.hpp>
+#include<time.h>
 
 using namespace std;
 using namespace sf;
@@ -20,14 +23,29 @@ char message1[256];
 struct player1
 {
     RenderWindow* window;
+    Sprite* playerSrpite;
     bool change;
     mqd_t* mq;
+    Sprite** points;
 
-    player1(RenderWindow* windowVal, bool changeVal, mqd_t* mqVal)
+    player1(RenderWindow* windowVal, bool changeVal, mqd_t* mqVal, Sprite* playerSpriteVal)
     {
         window = windowVal;
         change = changeVal;
         mq = mqVal;
+        playerSrpite = playerSpriteVal;
+    }
+
+    void setPoints(Sprite* point1, Sprite* point2, Sprite* point3, Sprite* point4, Sprite* point5, Sprite* point6)
+    {
+        points = new Sprite* [6];
+
+        points[0] = point1;
+        points[1] = point2;
+        points[2] = point3;
+        points[3] = point4;
+        points[4] = point5;
+        points[5] = point6;
     }
 };
 
@@ -64,8 +82,10 @@ void* player1_thread(void* args)
 {
     player1* player1_obj = (player1*) args;
     bool exitThread = false;
+    bool collision = false;
 
     char message[256];
+    string collisionMsg;
 
     while (!exitThread)
     {
@@ -80,8 +100,33 @@ void* player1_thread(void* args)
                 player1_obj->window->close(); 
                 break;
             }
-            else if (event.type == Event::KeyPressed)
+
+            // collisions
+            for(int i = 0; i < 6; i++)
             {
+                if(player1_obj->playerSrpite->getGlobalBounds().intersects(player1_obj->points[i]->getGlobalBounds()))
+                {
+                    collisionMsg = "1collide" + to_string(i);
+
+                    sprintf(message, collisionMsg.c_str());
+
+                    mq_send(*(player1_obj->mq), message, strlen(message), 0);
+
+                    exitThread = true;
+                    collision = true;
+
+                    break;
+                }
+            }
+
+            if(collision == true)
+            {
+                break;
+            }     
+
+            if (event.type == Event::KeyPressed)
+            {
+                //cout << collision << endl;
                 player1_obj->change = 1; // something has been written
 
                 if(Keyboard::isKeyPressed(Keyboard::Left)) // left
@@ -119,8 +164,9 @@ void* player1_thread(void* args)
 
                     exitThread = true;
                 }
-            }
+            }      
         }
+        
     }
 
     pthread_exit(0);
@@ -238,6 +284,42 @@ int main()
 
     RectangleShape squareShape(Vector2f(boxSize, boxSize)); // creates a 2D vector with length and width equal to the boxSize
 
+    // sound 
+
+    SoundBuffer theekHaiBuffer;
+
+    if(!theekHaiBuffer.loadFromFile("assets/theek hai.wav"))
+    {
+        cout << "Error loading theek hai" << endl;
+    }
+
+    Sound theekhai;
+    theekhai.setBuffer(theekHaiBuffer);
+
+    SoundBuffer samajhGyaBuffer;
+
+    if(!samajhGyaBuffer.loadFromFile("assets/samajh gaya.wav"))
+    {
+        cout << "Error loading samajh gya" << endl;
+    }
+
+    Sound samajhgya;
+    samajhgya.setBuffer(samajhGyaBuffer);
+
+    // game win
+
+    SoundBuffer gameOver;
+
+    if(!gameOver.loadFromFile("assets/smooth_criminal.wav"))
+    {
+        cout << "Error loading smooth criminal" << endl;
+    }
+
+    Sound smoothCriminal;
+    smoothCriminal.setBuffer(gameOver);
+
+    srand(time(NULL));
+
     // score 
 
     // font
@@ -249,7 +331,7 @@ int main()
     Text score_player1;
     score_player1.setFont(font);
     score_player1.setCharacterSize(40);
-    score_player1.setPosition(window_size.x - 240, 10);
+    score_player1.setPosition(window_size.x - 260, 10);
     score_player1.setString("Score P1: 0");
     score_player1.setFillColor(Color(139, 0, 0));
 
@@ -259,7 +341,7 @@ int main()
     Text score_player2;
     score_player2.setFont(font);
     score_player2.setCharacterSize(40);
-    score_player2.setPosition(window_size.x - 240, 60);
+    score_player2.setPosition(window_size.x - 260, 60);
     score_player2.setString("Score P2: 0");
     score_player2.setFillColor(Color(0, 0, 139));
 
@@ -376,7 +458,9 @@ int main()
 
     // making object for player 1
 
-    player1 player1_obj(&window, 0, mq);
+    player1 player1_obj(&window, 0, mq, &sprite);
+
+    player1_obj.setPoints(&point1, &point2, &point3, &point4, &point5, &point6);
 
     // display the window
     while (window.isOpen())
@@ -424,6 +508,116 @@ int main()
             sprite.move(0, 60);
         }
 
+        // collisions
+
+        if(strcmp(message1, "1collide0") == 0)
+        {
+            point1.setPosition(-100,-100);
+
+            // increment the score
+            score_1 += 5;
+            score_player1.setString("Score P1: " + to_string(score_1));
+
+            if(rand() % 2 == 0)
+            {
+                theekhai.play();
+            }
+            else
+            {
+                samajhgya.play();
+            }
+        }
+
+        if(strcmp(message1, "1collide1") == 0)
+        {
+            point2.setPosition(-100,-100);
+
+            // increment the score
+            score_1 += 5;
+            score_player1.setString("Score P1: " + to_string(score_1));
+
+            if(rand() % 2 == 0)
+            {
+                theekhai.play();
+            }
+            else
+            {
+                samajhgya.play();
+            }
+        }
+
+        if(strcmp(message1, "1collide2") == 0)
+        {
+            point3.setPosition(-100,-100);
+
+            // increment the score
+            score_1 += 5;
+            score_player1.setString("Score P1: " + to_string(score_1));
+
+            if(rand() % 2 == 0)
+            {
+                theekhai.play();
+            }
+            else
+            {
+                samajhgya.play();
+            }
+        }
+
+        if(strcmp(message1, "1collide3") == 0)
+        {
+            point4.setPosition(-100,-100);
+
+            // increment the score
+            score_1 += 5;
+            score_player1.setString("Score P1: " + to_string(score_1));
+
+            if(rand() % 2 == 0)
+            {
+                theekhai.play();
+            }
+            else
+            {
+                samajhgya.play();
+            }
+        }
+
+        if(strcmp(message1, "1collide4") == 0)
+        {
+            point5.setPosition(-100,-100);
+
+            // increment the score
+            score_1 += 10;
+            score_player1.setString("Score P1: " + to_string(score_1));
+
+            if(rand() % 2 == 0)
+            {
+                theekhai.play();
+            }
+            else
+            {
+                samajhgya.play();
+            }
+        }
+
+        if(strcmp(message1, "1collide5") == 0)
+        {
+            point6.setPosition(-100,-100);
+
+            // increment the score
+            score_1 += 10;
+            score_player1.setString("Score P1: " + to_string(score_1));
+
+            if(rand() % 2 == 0)
+            {
+                theekhai.play();
+            }
+            else
+            {
+                samajhgya.play();
+            }
+        }
+
         // if the sprite is going outside the border
 
         Vector2u windowSize = window.getSize();
@@ -446,6 +640,21 @@ int main()
         else if(spritePosition.y + spriteBounds.height > windowSize.y) // bottom border
         {
             sprite.setPosition(spritePosition.x, windowSize.y - spriteBounds.height);
+        }
+
+        if (score_1 == 40) // when user crosses the screen or presses Alt+F4
+        {
+            Clock gameOverClock;
+
+            Time timeLimit = seconds(5);
+
+            cout << score_1 << endl;
+            smoothCriminal.play();
+
+            if (gameOverClock.getElapsedTime() >= timeLimit)
+            {
+                window.close();
+            }
         }
 
         // draw 
