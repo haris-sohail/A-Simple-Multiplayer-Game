@@ -291,9 +291,9 @@ int main()
     // create the sprite 
 
     // create a texture first
-    Texture spriteTexture, point1Texture, point2Texture, point3Texture, point4Texture;
+    Texture spriteTexture, point1Texture, point2Texture, point3Texture, point4Texture, point5Texture, point6Texture;
 
-    Sprite sprite, point1, point2, point3, point4;
+    Sprite sprite, point1, point2, point3, point4, point5, point6;
 
     // Failed to load image
 
@@ -319,26 +319,34 @@ int main()
     point2Texture.loadFromFile("assets/point2.png");
     point3Texture.loadFromFile("assets/point3.png");
     point4Texture.loadFromFile("assets/point4.png");
+    point5Texture.loadFromFile("assets/point5.png");
+    point6Texture.loadFromFile("assets/point6.png");
 
     // set the sprite 
 
     point1.setTexture(point1Texture);
     point2.setTexture(point2Texture);
     point3.setTexture(point3Texture);
-    point4.setTexture(point4Texture);   
+    point4.setTexture(point4Texture);
+    point5.setTexture(point5Texture);
+    point6.setTexture(point6Texture);   
 
     // set the scale of the collectables
 
     point1.setScale(3.6, 3.6);
     point2.setScale(3.6, 3.6);
     point3.setScale(3.6, 3.6);
-    point4.setScale(3.6, 3.6); 
+    point4.setScale(3.6, 3.6);
+    point5.setScale(3.6, 3.6);
+    point6.setScale(3.6, 3.6); 
 
     // set the position of the collectables
     point1.setPosition(4 * 60, 4 * 60);
-    point2.setPosition(6 * 60, 6 * 60);
-    point3.setPosition(9 * 60, 10 * 60);
+    point2.setPosition(10 * 60, 6 * 60);
+    point3.setPosition(2 * 60, 15 * 60);
     point4.setPosition(10 * 60, 12 * 60);
+    point5.setPosition(13 * 60, 3 * 60);
+    point6.setPosition(14 * 60, 14 * 60);
 
     // draw the sprite
 
@@ -356,6 +364,8 @@ int main()
     window.draw(point2);
     window.draw(point3);
     window.draw(point4);
+    window.draw(point5);
+    window.draw(point6);
 
     // now display
     window.display();
@@ -467,6 +477,8 @@ int main()
         window.draw(point2);
         window.draw(point3);
         window.draw(point4);
+        window.draw(point5);
+        window.draw(point6);
         window.display();
     }
     pthread_exit(0);
